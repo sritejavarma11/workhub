@@ -35,4 +35,16 @@ public class Employee {
     public int getId() {
         return id;
     }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 }

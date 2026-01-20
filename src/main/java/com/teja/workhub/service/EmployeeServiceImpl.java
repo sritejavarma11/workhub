@@ -3,8 +3,11 @@ package com.teja.workhub.service;
 import com.teja.workhub.dto.EmployeeRequest;
 import com.teja.workhub.dto.EmployeeResponse;
 import com.teja.workhub.entity.Employee;
+import com.teja.workhub.exception.EmployeeNotFoundException;
 import com.teja.workhub.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -37,5 +40,34 @@ public class EmployeeServiceImpl implements EmployeeService {
                         emp.getEmail()
                 ))
                 .toList();
+    }
+
+    @Override
+    public EmployeeResponse getEmployeeById(int id) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee Not Found"));
+
+        return new EmployeeResponse(employee.getId(), employee.getName(), employee.getEmail());
+    }
+
+    @Override
+    public EmployeeResponse updateEmployee(@PathVariable int id, @RequestBody EmployeeRequest employeeRequest) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee Not Found"));
+
+        employee.setName(employeeRequest.getName());
+        employee.setEmail(employeeRequest.getEmail());
+
+        Employee updatedEmployee = employeeRepository.save(employee);
+
+        return new EmployeeResponse(updatedEmployee.getId(), updatedEmployee.getName(), updatedEmployee.getEmail());
+    }
+
+    @Override
+    public void deleteEmployee(int id) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee Not Found"));
+
+        employeeRepository.delete(employee);
     }
 }
