@@ -6,6 +6,9 @@ import com.teja.workhub.entity.Employee;
 import com.teja.workhub.repository.EmployeeRepository;
 import com.teja.workhub.service.EmployeeService;
 import jakarta.persistence.GeneratedValue;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,27 +28,29 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public EmployeeResponse createEmployee(@RequestBody EmployeeRequest employeeRequest){
-        return employeeService.createEmployee(employeeRequest);
+    public ResponseEntity<EmployeeResponse> createEmployee(@Valid @RequestBody EmployeeRequest employeeRequest){
+        EmployeeResponse response = employeeService.createEmployee(employeeRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    public List<EmployeeResponse> findAllEmployees(){
-        return employeeService.getAllEmployees();
+    @GetMapping
+    public ResponseEntity<List<EmployeeResponse>> findAllEmployees(){
+        return ResponseEntity.ok(employeeService.getAllEmployees());
     }
 
     @GetMapping("/{id}")
-    public EmployeeResponse findEmployeeBId(@PathVariable int id){
-        return employeeService.getEmployeeById(id);
+    public ResponseEntity<EmployeeResponse> findEmployeeBId(@PathVariable int id){
+        return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
     @PutMapping("/{id}")
-    public EmployeeResponse updateEmployee(@PathVariable int id, @RequestBody EmployeeRequest employeeRequest){
-        return employeeService.updateEmployee(id, employeeRequest);
+    public ResponseEntity<EmployeeResponse> updateEmployee(@PathVariable int id, @Valid @RequestBody EmployeeRequest employeeRequest){
+        return ResponseEntity.ok(employeeService.updateEmployee(id, employeeRequest));
     }
 
     @DeleteMapping("/{id}")
-    public String deleteEmployee(@PathVariable int id){
+    public ResponseEntity<Void> deleteEmployee(@PathVariable int id){
         employeeService.deleteEmployee(id);
-        return "Employee deleted: " + id;
+        return ResponseEntity.noContent().build();
     }
 }

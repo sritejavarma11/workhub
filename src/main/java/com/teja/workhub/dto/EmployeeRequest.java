@@ -1,9 +1,16 @@
 package com.teja.workhub.dto;
 
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 public class EmployeeRequest {
 
+    @NotBlank(message = "Name cannot be empty")
     private String name;
+
+    @Email(message = "Email must be valid")
+    @NotBlank(message = "Email cannot be empty")
     private String email;
 
     public String getEmail() {
