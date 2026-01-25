@@ -2,11 +2,16 @@ package com.teja.workhub.controller;
 
 import com.teja.workhub.dto.EmployeeRequest;
 import com.teja.workhub.dto.EmployeeResponse;
+import com.teja.workhub.dto.PaginatedResponse;
 import com.teja.workhub.entity.Employee;
 import com.teja.workhub.repository.EmployeeRepository;
 import com.teja.workhub.service.EmployeeService;
 import jakarta.persistence.GeneratedValue;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +39,29 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EmployeeResponse>> findAllEmployees(){
-        return ResponseEntity.ok(employeeService.getAllEmployees());
+    public ResponseEntity<PaginatedResponse<EmployeeResponse>> findAllEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction){
+
+            Sort sort = direction.equalsIgnoreCase("asc")
+                            ? Sort.by(sortBy).ascending() :  Sort.by(sortBy).descending();
+
+            Pageable pageable  = PageRequest.of(page, size, sort);
+
+            Page<EmployeeResponse> pageresponse = employeeService.getAllEmployees(pageable);
+
+            PaginatedResponse<EmployeeResponse> response = new PaginatedResponse<>(
+                    pageresponse.getContent(),
+                    pageresponse.getNumber(),
+                    pageresponse.getSize(),
+                    (int)pageresponse.getTotalElements(),
+                    pageresponse.getTotalPages(),
+                    pageresponse.isLast()
+            );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")

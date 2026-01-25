@@ -5,6 +5,8 @@ import com.teja.workhub.dto.EmployeeResponse;
 import com.teja.workhub.entity.Employee;
 import com.teja.workhub.exception.EmployeeNotFoundException;
 import com.teja.workhub.repository.EmployeeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,15 +33,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<EmployeeResponse> getAllEmployees() {
-        return employeeRepository.findAll()
-                .stream()
-                .map(emp -> new EmployeeResponse(
-                        emp.getId(),
-                        emp.getName(),
-                        emp.getEmail()
-                ))
-                .toList();
+    public Page<EmployeeResponse> getAllEmployees(Pageable pageable) {
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+
+        Page<EmployeeResponse> employeeResponsePage = employeePage.map(
+                emp -> new EmployeeResponse(emp.getId(), emp.getName(), emp.getEmail())
+
+        );
+
+        return employeeResponsePage;
     }
 
     @Override
