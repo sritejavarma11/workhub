@@ -43,14 +43,17 @@ public class EmployeeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction){
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email
+            ){
 
             Sort sort = direction.equalsIgnoreCase("asc")
                             ? Sort.by(sortBy).ascending() :  Sort.by(sortBy).descending();
 
             Pageable pageable  = PageRequest.of(page, size, sort);
 
-            Page<EmployeeResponse> pageresponse = employeeService.getAllEmployees(pageable);
+            Page<EmployeeResponse> pageresponse = employeeService.getAllEmployees(name, email, pageable);
 
             PaginatedResponse<EmployeeResponse> response = new PaginatedResponse<>(
                     pageresponse.getContent(),

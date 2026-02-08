@@ -33,8 +33,32 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeResponse> getAllEmployees(Pageable pageable) {
-        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+    public Page<EmployeeResponse> getAllEmployees(String name, String email, Pageable pageable) {
+        Page<Employee> employeePage;
+
+        boolean hasName = name != null && !name.isBlank();
+        boolean hasEmail = email != null && !email.isBlank();
+
+        if (hasName && hasEmail) {
+            employeePage =
+                    employeeRepository
+                            .findByNameContainingIgnoreCaseAndEmailContainingIgnoreCase(
+                                    name, email, pageable
+                            );
+
+        } else if (hasName) {
+            employeePage =
+                    employeeRepository
+                            .findByNameContainingIgnoreCase(name, pageable);
+
+        } else if (hasEmail) {
+            employeePage =
+                    employeeRepository
+                            .findByEmailContainingIgnoreCase(email, pageable);
+
+        } else {
+            employeePage = employeeRepository.findAll(pageable);
+        }
 
         Page<EmployeeResponse> employeeResponsePage = employeePage.map(
                 emp -> new EmployeeResponse(emp.getId(), emp.getName(), emp.getEmail())
@@ -42,6 +66,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         );
 
         return employeeResponsePage;
+
     }
 
     @Override

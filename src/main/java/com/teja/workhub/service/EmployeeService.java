@@ -14,7 +14,7 @@ public interface EmployeeService {
 
     EmployeeResponse createEmployee(EmployeeRequest employeeRequest);
 
-    Page<EmployeeResponse> getAllEmployees(Pageable pageable);
+    Page<EmployeeResponse> getAllEmployees(String name, String email, Pageable pageable);
 
     EmployeeResponse getEmployeeById(int id);
 
