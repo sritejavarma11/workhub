@@ -2,6 +2,8 @@ package com.teja.workhub.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "employees")
 public class Employee {
@@ -15,6 +17,18 @@ public class Employee {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EmployeeStatus status;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     //constructors
     public Employee(){}
@@ -46,5 +60,12 @@ public class Employee {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public EmployeeStatus getStatus() {
+        return status;
+    }
+    public void setStatus(EmployeeStatus status) {
+        this.status = status;
     }
 }

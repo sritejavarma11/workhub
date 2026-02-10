@@ -3,20 +3,22 @@ package com.teja.workhub.service;
 import com.teja.workhub.dto.EmployeeRequest;
 import com.teja.workhub.dto.EmployeeResponse;
 import com.teja.workhub.entity.Employee;
+import com.teja.workhub.entity.EmployeeStatus;
 import com.teja.workhub.exception.EmployeeNotFoundException;
 import com.teja.workhub.repository.EmployeeRepository;
+import com.teja.workhub.specifications.EmployeeSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
+
+import java.time.LocalDate;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
-    EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
 
     public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
         this.employeeRepository = employeeRepository;
@@ -26,42 +28,29 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeResponse createEmployee(EmployeeRequest employeeRequest) {
         Employee employee = new Employee(employeeRequest.getName(), employeeRequest.getEmail());
+        employee.setStatus(EmployeeStatus.ACTIVE);
 
         Employee savedEmployee = employeeRepository.save(employee);
 
-        return new EmployeeResponse(savedEmployee.getId(), savedEmployee.getName(), savedEmployee.getEmail());
+        return new EmployeeResponse(savedEmployee.getId(), savedEmployee.getName(), savedEmployee.getStatus(), savedEmployee.getEmail());
     }
 
     @Override
-    public Page<EmployeeResponse> getAllEmployees(String name, String email, Pageable pageable) {
+    public Page<EmployeeResponse> getAllEmployees(String name, String email, EmployeeStatus status, LocalDate from , LocalDate to, Pageable pageable) {
         Page<Employee> employeePage;
 
-        boolean hasName = name != null && !name.isBlank();
-        boolean hasEmail = email != null && !email.isBlank();
+        Specification<Employee> spec =
+                Specification.where(EmployeeSpecifications.hasName(name))
+                        .and(EmployeeSpecifications.hasEmail(email))
+                        .and(EmployeeSpecifications.hasStatus(status))
+                        .and(EmployeeSpecifications.createdAfter(from))
+                        .and(EmployeeSpecifications.createdBefore(to));
 
-        if (hasName && hasEmail) {
-            employeePage =
-                    employeeRepository
-                            .findByNameContainingIgnoreCaseAndEmailContainingIgnoreCase(
-                                    name, email, pageable
-                            );
 
-        } else if (hasName) {
-            employeePage =
-                    employeeRepository
-                            .findByNameContainingIgnoreCase(name, pageable);
-
-        } else if (hasEmail) {
-            employeePage =
-                    employeeRepository
-                            .findByEmailContainingIgnoreCase(email, pageable);
-
-        } else {
-            employeePage = employeeRepository.findAll(pageable);
-        }
+        employeePage = employeeRepository.findAll(spec, pageable);
 
         Page<EmployeeResponse> employeeResponsePage = employeePage.map(
-                emp -> new EmployeeResponse(emp.getId(), emp.getName(), emp.getEmail())
+                emp -> new EmployeeResponse(emp.getId(), emp.getName(), emp.getStatus(), emp.getEmail())
 
         );
 
@@ -74,20 +63,36 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee Not Found"));
 
-        return new EmployeeResponse(employee.getId(), employee.getName(), employee.getEmail());
+        return new EmployeeResponse(employee.getId(), employee.getName(), employee.getStatus(), employee.getEmail());
     }
 
     @Override
-    public EmployeeResponse updateEmployee(@PathVariable int id, @RequestBody EmployeeRequest employeeRequest) {
+    public EmployeeResponse updateEmployee(int id, EmployeeRequest employeeRequest) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee Not Found"));
 
-        employee.setName(employeeRequest.getName());
-        employee.setEmail(employeeRequest.getEmail());
+        if(employeeRequest.getName() != null) {
+            employee.setName(employeeRequest.getName());
+        }
+        if(employeeRequest.getEmail() != null) {
+            employee.setEmail(employeeRequest.getEmail());
+        }
 
         Employee updatedEmployee = employeeRepository.save(employee);
 
-        return new EmployeeResponse(updatedEmployee.getId(), updatedEmployee.getName(), updatedEmployee.getEmail());
+        return new EmployeeResponse(updatedEmployee.getId(), updatedEmployee.getName(), updatedEmployee.getStatus(), updatedEmployee.getEmail());
+    }
+
+    public EmployeeResponse updateEmployeeStatus(int id, EmployeeStatus status) {
+        Employee employee  = employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee Not Found"));
+
+        employee.setStatus(status);
+
+        Employee updatedEmployee = employeeRepository.save(employee);
+
+        return new EmployeeResponse(updatedEmployee.getId(), updatedEmployee.getName(), updatedEmployee.getStatus(), updatedEmployee.getEmail());
+
     }
 
     @Override
